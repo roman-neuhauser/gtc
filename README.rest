@@ -1,0 +1,79 @@
+.. vim: ft=rst sts=2 sw=2 tw=72
+.. default-role:: literal
+
+########################################################################
+                 gtc: git wrapper for /etc maintenance
+########################################################################
+
+:Author: Roman Neuhauser
+:Contact: neuhauser@sigpipe.cz
+:Copyright: This document is in the public domain.
+
+
+Synopsis
+========
+
+::
+
+  gtc [git-options] <git-command> [git-arguments]
+
+
+Description
+===========
+
+`gtc` is a very thin git_ wrapper tailored for `/etc` maintenance,
+including in a shared-root environment.
+
+.. _git: http://git-scm.org/
+
+`gtc` has two goals:
+
+* let me version changes to the configurations of my boxes
+* let me and others track who did what in a shared-root environment
+
+The first goal is simple to attain with plain git, the value added
+by gtc in this case is just in moving the `.git` directory away,
+so my `grep -r whatever /etc` calls won't slow down,
+there's no need to complicate backup rules, etc.
+
+The second goal is achieved under some assumptions:
+
+* protection against malevolent behaviors is out of scope
+* sudo(8) is used to escalate to root from individual accounts
+
+Towards this goal, gtc makes sure that it's used from non-root accounts,
+and that git is configured with the user's name and email address.
+
+.. note::
+
+  `gtc` is a convenience helper, not a policy-enforcement tool!
+
+
+Examples
+========
+
+::
+
+  % cd /etc
+  % gtc init
+  % gtc add .
+  % gtc commit -m 'start versioning /etc'
+  % sudo vim /etc/ssh/sshd_config
+  % gtc diff
+  diff git a/ssh/sshd_config b/ssh/sshd_config
+  index 2745f1e..657eac0 100644
+  --- a/ssh/sshd_config
+  +++ b/ssh/sshd_config
+  ...
+  % gtc add .
+  % gtc commit
+  % sudo service sshd restart
+
+
+License
+=======
+
+MIT_.
+
+.. _MIT: LICENSE
+
