@@ -1,2 +1,4 @@
 *.html
 *.sw?
+/gtc
+/gtc.1.gz
