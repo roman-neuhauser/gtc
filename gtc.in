@@ -1,0 +1,47 @@
+#!/bin/sh
+# vim: ft=sh sts=2 sw=2 tw=72
+# (c) Roman Neuhauser <neuhauser@sigpipe.cz>
+# Distributed under the MIT license (see LICENSE file)
+
+SELF="${0##*/}"
+
+abort()
+{
+  for a in "$@"; do
+    printf "%s: %s\n" "$SELF" "$a"
+  done
+  exit 1
+} >&2
+
+user_name_known()
+{
+  test $(id -u) -eq 0 && return 0
+  abort "refusing to run anonymously, please use an unprivileged account"
+}
+
+git_config_user_ok()
+{
+  (git config --global user.name &&
+   git config --global user.email) >/dev/null
+  test $? -eq 0 && return 0
+  abort "please set user.name, user.email in ~/.gitconfig"
+}
+
+in_a_workdir()
+{
+  case $(pwd) in
+  /usr/local/etc)
+    export GIT_DIR=/var/db/etc-local.git ;;
+  /etc)
+    export GIT_DIR=/var/db/etc.git ;;
+  *)
+    abort "please chdir into /etc or /usr/local/etc" ;;
+  esac
+  export GIT_WORK_TREE="$PWD"
+}
+
+user_name_known
+git_config_user_ok
+in_a_workdir
+
+exec sudo -E git ${1+"$@"}
